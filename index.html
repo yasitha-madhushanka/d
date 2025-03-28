@@ -50,6 +50,7 @@
             border-radius: 4px;
             overflow: hidden;
             margin-top: 20px;
+            position: relative;
         }
         iframe {
             width: 100%;
@@ -125,6 +126,56 @@
         #stopButton:hover {
             background-color: #d32f2f;
         }
+        
+        /* Ad container styles */
+        #adContainer {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(0, 0, 0, 0.9);
+            display: none;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            z-index: 100;
+        }
+        
+        #adGrid {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            grid-gap: 20px;
+            max-width: 650px;
+            margin: 20px;
+        }
+        
+        .adSlot {
+            background-color: #222;
+            border: 1px solid #00FA7B;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 250px;
+            width: 300px;
+        }
+        
+        #adCountdown {
+            color: white;
+            font-size: 24px;
+            margin-bottom: 20px;
+        }
+        
+        #skipAdButton {
+            background-color: #f44336;
+            width: auto;
+            padding: 8px 16px;
+            margin-top: 20px;
+        }
+        
+        #skipAdButton:hover {
+            background-color: #d32f2f;
+        }
     </style>
 </head>
 <body>
@@ -135,6 +186,18 @@
                 <h1>Website Preview</h1>
                 <div id="iframeContainer">
                     <iframe id="websiteFrame" src="about:blank" sandbox="allow-same-origin allow-scripts allow-popups allow-forms"></iframe>
+                    
+                    <!-- Ad container that will be shown before refresh -->
+                    <div id="adContainer">
+                        <div id="adCountdown">Ads will disappear in: 15 seconds</div>
+                        <div id="adGrid">
+                            <div class="adSlot" id="ad1"></div>
+                            <div class="adSlot" id="ad2"></div>
+                            <div class="adSlot" id="ad3"></div>
+                            <div class="adSlot" id="ad4"></div>
+                        </div>
+                        <button id="skipAdButton">Skip Ads</button>
+                    </div>
                 </div>
             </div>
         </div>
@@ -242,11 +305,18 @@
             const timerDisplay = document.getElementById('timerDisplay');
             const websiteFrame = document.getElementById('websiteFrame');
             
+            // Ad related elements
+            const adContainer = document.getElementById('adContainer');
+            const adCountdown = document.getElementById('adCountdown');
+            const skipAdButton = document.getElementById('skipAdButton');
+            
             // Variables
             let refreshTimer = null;
             let currentCountdown = null;
             let isRunning = false;
             let currentUrl = '';
+            let adTimer = null;
+            let adCountdownSeconds = 15;
             
             // Event listeners for radio buttons
             normalIntervalRadio.addEventListener('change', function() {
@@ -281,6 +351,9 @@
             startButton.addEventListener('click', startRefreshing);
             stopButton.addEventListener('click', stopRefreshing);
             
+            // Skip ad button
+            skipAdButton.addEventListener('click', skipAds);
+            
             function startRefreshing() {
                 if (isRunning) return;
                 
@@ -301,8 +374,10 @@
                     }
                     startCountdown(intervalSeconds);
                     refreshTimer = setInterval(() => {
-                        refreshPage();
-                        startCountdown(intervalSeconds);
+                        showAds(() => {
+                            refreshPage();
+                            startCountdown(intervalSeconds);
+                        });
                     }, intervalSeconds * 1000);
                 } else {
                     setupRandomRefresh();
@@ -340,10 +415,12 @@
                 }
                 
                 refreshTimer = setTimeout(() => {
-                    refreshPage();
-                    if (isRunning) {
-                        setupRandomRefresh(); // Setup next random refresh
-                    }
+                    showAds(() => {
+                        refreshPage();
+                        if (isRunning) {
+                            setupRandomRefresh(); // Setup next random refresh
+                        }
+                    });
                 }, randomInterval * 1000);
             }
             
@@ -364,6 +441,9 @@
                 }
                 
                 timerDisplay.textContent = '';
+                
+                // Also hide ads if they're showing
+                hideAds();
             }
             
             function loadUrl() {
@@ -448,6 +528,75 @@
                 min = Math.ceil(min);
                 max = Math.floor(max);
                 return Math.floor(Math.random() * (max - min + 1)) + min;
+            }
+            
+            // Ad related functions
+            function showAds(callback) {
+                // Reset ad countdown
+                adCountdownSeconds = 15;
+                adCountdown.textContent = `Ads will disappear in: ${adCountdownSeconds} seconds`;
+                
+                // Load ads
+                loadAds();
+                
+                // Show ad container
+                adContainer.style.display = 'flex';
+                
+                // Start ad countdown
+                if (adTimer) {
+                    clearInterval(adTimer);
+                }
+                
+                adTimer = setInterval(() => {
+                    adCountdownSeconds--;
+                    adCountdown.textContent = `Ads will disappear in: ${adCountdownSeconds} seconds`;
+                    
+                    if (adCountdownSeconds <= 0) {
+                        hideAds();
+                        if (callback) callback();
+                    }
+                }, 1000);
+            }
+            
+            function hideAds() {
+                adContainer.style.display = 'none';
+                if (adTimer) {
+                    clearInterval(adTimer);
+                    adTimer = null;
+                }
+            }
+            
+            function skipAds() {
+                hideAds();
+                refreshPage();
+                
+                // Restart the main timer if needed
+                if (normalIntervalRadio.checked) {
+                    const intervalSeconds = parseInt(document.getElementById('intervalTime').value);
+                    startCountdown(intervalSeconds);
+                }
+            }
+            
+            function loadAds() {
+                // Ad code for each slot
+                const adCode = `
+                    <script type="text/javascript">
+                        atOptions = {
+                            'key' : '242d1e51b3c512f9ddb86da4329dc237',
+                            'format' : 'iframe',
+                            'height' : 250,
+                            'width' : 300,
+                            'params' : {}
+                        };
+                    <\/script>
+                    <script type="text/javascript" src="//www.highperformanceformat.com/242d1e51b3c512f9ddb86da4329dc237/invoke.js"><\/script>
+                `;
+                
+                // Load the same ad in all 4 slots
+                document.getElementById('ad1').innerHTML = adCode;
+                document.getElementById('ad2').innerHTML = adCode;
+                document.getElementById('ad3').innerHTML = adCode;
+                document.getElementById('ad4').innerHTML = adCode;
             }
         });
     </script>
