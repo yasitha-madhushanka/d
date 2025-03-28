@@ -1,7 +1,6 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-    <link rel="stylesheet" href="styles.css">
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Website Auto Refresher (Iframe)</title>
@@ -64,6 +63,7 @@
             display: block;
             margin-bottom: 5px;
             font-weight: bold;
+            color: #00FA7B;
         }
         input[type="radio"], input[type="checkbox"] {
             margin-right: 8px;
@@ -83,6 +83,8 @@
             border-radius: 4px;
             width: 100%;
             box-sizing: border-box;
+            background-color: #0a1a26;
+            color: white;
         }
         input[type="url"] {
             margin-bottom: 10px;
@@ -100,10 +102,10 @@
             cursor: pointer;
             border-radius: 4px;
             width: 100%;
+            transition: background-color 0.3s;
         }
         button:hover {
             background-color: #8800ff;
-            
         }
         .hidden {
             display: none;
@@ -112,6 +114,7 @@
             text-align: center;
             font-size: 18px;
             margin-top: 15px;
+            color: #00FA7B;
         }
         .controls {
             display: flex;
@@ -140,6 +143,8 @@
             justify-content: center;
             align-items: center;
             z-index: 100;
+            padding: 20px;
+            box-sizing: border-box;
         }
         
         #adGrid {
@@ -153,11 +158,12 @@
         .adSlot {
             background-color: #222;
             border: 1px solid #00FA7B;
+            height: 250px;
+            width: 300px;
+            overflow: hidden;
             display: flex;
             justify-content: center;
             align-items: center;
-            height: 250px;
-            width: 300px;
         }
         
         #adCountdown {
@@ -176,6 +182,45 @@
         #skipAdButton:hover {
             background-color: #d32f2f;
         }
+        
+        /* Close button styles */
+        #closeAdButton {
+            position: absolute;
+            top: 15px;
+            right: 15px;
+            background: rgba(255, 255, 255, 0.2);
+            border: none;
+            color: white;
+            font-size: 24px;
+            font-weight: bold;
+            cursor: pointer;
+            display: none;
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: all 0.3s;
+            z-index: 101;
+        }
+        
+        #closeAdButton:hover {
+            background-color: rgba(255, 255, 255, 0.3);
+            color: #00FA7B;
+            transform: scale(1.1);
+        }
+        
+        #closeAdButton:active {
+            transform: scale(0.9);
+        }
+        
+        .ad-label {
+            color: white;
+            font-size: 14px;
+            margin-top: 5px;
+            text-align: center;
+        }
     </style>
 </head>
 <body>
@@ -189,12 +234,25 @@
                     
                     <!-- Ad container that will be shown before refresh -->
                     <div id="adContainer">
+                        <button id="closeAdButton" title="Close" class="hidden">×</button>
                         <div id="adCountdown">Ads will disappear in: 15 seconds</div>
                         <div id="adGrid">
-                            <div class="adSlot" id="ad1"></div>
-                            <div class="adSlot" id="ad2"></div>
-                            <div class="adSlot" id="ad3"></div>
-                            <div class="adSlot" id="ad4"></div>
+                            <div class="ad-slot-container">
+                                <div class="adSlot" id="ad1"></div>
+                                <div class="ad-label">Advertisement</div>
+                            </div>
+                            <div class="ad-slot-container">
+                                <div class="adSlot" id="ad2"></div>
+                                <div class="ad-label">Advertisement</div>
+                            </div>
+                            <div class="ad-slot-container">
+                                <div class="adSlot" id="ad3"></div>
+                                <div class="ad-label">Advertisement</div>
+                            </div>
+                            <div class="ad-slot-container">
+                                <div class="adSlot" id="ad4"></div>
+                                <div class="ad-label">Advertisement</div>
+                            </div>
                         </div>
                         <button id="skipAdButton">Skip Ads</button>
                     </div>
@@ -309,6 +367,7 @@
             const adContainer = document.getElementById('adContainer');
             const adCountdown = document.getElementById('adCountdown');
             const skipAdButton = document.getElementById('skipAdButton');
+            const closeAdButton = document.getElementById('closeAdButton');
             
             // Variables
             let refreshTimer = null;
@@ -353,6 +412,9 @@
             
             // Skip ad button
             skipAdButton.addEventListener('click', skipAds);
+            
+            // Close ad button
+            closeAdButton.addEventListener('click', handleCloseAd);
             
             function startRefreshing() {
                 if (isRunning) return;
@@ -536,6 +598,9 @@
                 adCountdownSeconds = 15;
                 adCountdown.textContent = `Ads will disappear in: ${adCountdownSeconds} seconds`;
                 
+                // Hide close button initially
+                closeAdButton.classList.add('hidden');
+                
                 // Load ads
                 loadAds();
                 
@@ -549,9 +614,18 @@
                 
                 adTimer = setInterval(() => {
                     adCountdownSeconds--;
-                    adCountdown.textContent = `Ads will disappear in: ${adCountdownSeconds} seconds`;
                     
-                    if (adCountdownSeconds <= 0) {
+                    // Update countdown display
+                    if (adCountdownSeconds > 0) {
+                        adCountdown.textContent = `Ads will disappear in: ${adCountdownSeconds} seconds`;
+                    } else if (adCountdownSeconds === 0) {
+                        // Show close button when countdown reaches 0
+                        closeAdButton.classList.remove('hidden');
+                        adCountdown.textContent = 'You may now close the ads';
+                    }
+                    
+                    // Auto-close after 20 seconds total (15 + 5)
+                    if (adCountdownSeconds <= -5) {
                         hideAds();
                         if (callback) callback();
                     }
@@ -560,6 +634,7 @@
             
             function hideAds() {
                 adContainer.style.display = 'none';
+                closeAdButton.classList.add('hidden');
                 if (adTimer) {
                     clearInterval(adTimer);
                     adTimer = null;
@@ -577,26 +652,63 @@
                 }
             }
             
+            function handleCloseAd() {
+                hideAds();
+                refreshPage();
+                
+                // Restart the main timer if needed
+                if (normalIntervalRadio.checked) {
+                    const intervalSeconds = parseInt(document.getElementById('intervalTime').value);
+                    startCountdown(intervalSeconds);
+                }
+            }
+            
             function loadAds() {
-                // Ad code for each slot
-                const adCode = `
-                    <script type="text/javascript">
-                        atOptions = {
-                            'key' : '242d1e51b3c512f9ddb86da4329dc237',
-                            'format' : 'iframe',
-                            'height' : 250,
-                            'width' : 300,
-                            'params' : {}
-                        };
-                    <\/script>
-                    <script type="text/javascript" src="//www.highperformanceformat.com/242d1e51b3c512f9ddb86da4329dc237/invoke.js"><\/script>
+                // Clear previous ads
+                document.getElementById('ad1').innerHTML = '';
+                document.getElementById('ad2').innerHTML = '';
+                document.getElementById('ad3').innerHTML = '';
+                document.getElementById('ad4').innerHTML = '';
+                
+                // Load new ads
+                loadAd('ad1');
+                loadAd('ad2');
+                loadAd('ad3');
+                loadAd('ad4');
+            }
+            
+            function loadAd(adSlotId) {
+                const adSlot = document.getElementById(adSlotId);
+                
+                // Create ad script
+                const adScript = document.createElement('script');
+                adScript.type = 'text/javascript';
+                adScript.innerHTML = `
+                    atOptions = {
+                        'key': '242d1e51b3c512f9ddb86da4329dc237',
+                        'format': 'iframe',
+                        'height': 250,
+                        'width': 300,
+                        'params': {}
+                    };
                 `;
                 
-                // Load the same ad in all 4 slots
-                document.getElementById('ad1').innerHTML = adCode;
-                document.getElementById('ad2').innerHTML = adCode;
-                document.getElementById('ad3').innerHTML = adCode;
-                document.getElementById('ad4').innerHTML = adCode;
+                // Create ad container iframe
+                const adIframe = document.createElement('iframe');
+                adIframe.style.width = '300px';
+                adIframe.style.height = '250px';
+                adIframe.style.border = 'none';
+                adIframe.style.overflow = 'hidden';
+                
+                // Append elements
+                adSlot.appendChild(adScript);
+                adSlot.appendChild(adIframe);
+                
+                // Load ad content
+                const invokeScript = document.createElement('script');
+                invokeScript.type = 'text/javascript';
+                invokeScript.src = '//www.highperformanceformat.com/242d1e51b3c512f9ddb86da4329dc237/invoke.js';
+                adSlot.appendChild(invokeScript);
             }
         });
     </script>
