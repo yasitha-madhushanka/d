@@ -3,713 +3,112 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Website Auto Refresher (Iframe)</title>
+    <title>Ad Popup Example</title>
     <style>
         body {
             font-family: Arial, sans-serif;
             margin: 0;
             padding: 20px;
-            background-color: #09141D;
-            display: flex;
-            min-height: 100vh;
-        }
-        h1 {
-            text-align: center;
-            color: #00FA7B;
-            margin-top: 0;
-        }
-        .main-container {
-            display: flex;
-            width: 100%;
-            gap: 20px;
-        }
-        .iframe-container {
-            flex: 3;
-            height: calc(100vh - 40px);
-            display: flex;
-            flex-direction: column;
-        }
-        .controls-container {
-            flex: 1;
-            min-width: 350px;
-            height: 900px;
-            overflow-y: auto;
-        }
-        .container {
-            background-color: #09141D;
-            padding: 20px;
-            border-radius: 8px;
-            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
-            height: 600px;
-            box-sizing: border-box;
-        }
-        #iframeContainer {
-            flex: 1;
-            border: 1px solid #00FA7B;
-            border-radius: 4px;
-            overflow: hidden;
-            margin-top: 20px;
-            position: relative;
-        }
-        iframe {
-            width: 100%;
-            height: 600px;
-            border: none;
-        }
-        .option-group {
-            margin-bottom: 15px;
-        }
-        label {
-            display: block;
-            margin-bottom: 5px;
-            font-weight: bold;
-            color: #00FA7B;
-        }
-        input[type="radio"], input[type="checkbox"] {
-            margin-right: 8px;
-        }
-        .radio-option {
-            display: inline-block;
-            margin-right: 15px;
-        }
-        .range-inputs {
-            display: flex;
-            align-items: center;
-            gap: 10px;
-        }
-        input[type="number"], input[type="url"] {
-            padding: 8px;
-            border: 1px solid #00FA7B;
-            border-radius: 4px;
-            width: 100%;
-            box-sizing: border-box;
-            background-color: #0a1a26;
-            color: white;
-        }
-        input[type="url"] {
-            margin-bottom: 10px;
-        }
-        button {
-            background-color: #6f00ff;
-            color: white;
-            border: none;
-            padding: 10px 20px;
-            text-align: center;
-            text-decoration: none;
-            display: inline-block;
-            font-size: 16px;
-            margin: 20px 0;
-            cursor: pointer;
-            border-radius: 4px;
-            width: 100%;
-            transition: background-color 0.3s;
-        }
-        button:hover {
-            background-color: #8800ff;
-        }
-        .hidden {
-            display: none;
-        }
-        #timerDisplay {
-            text-align: center;
-            font-size: 18px;
-            margin-top: 15px;
-            color: #00FA7B;
-        }
-        .controls {
-            display: flex;
-            gap: 10px;
-        }
-        .controls button {
-            flex: 1;
-        }
-        #stopButton {
-            background-color: #f44336;
-        }
-        #stopButton:hover {
-            background-color: #d32f2f;
         }
         
-        /* Ad container styles */
-        #adContainer {
-            position: absolute;
+        .ad-popup {
+            display: none;
+            position: fixed;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            width: 650px;
+            background: white;
+            border: 1px solid #ccc;
+            box-shadow: 0 0 10px rgba(0,0,0,0.3);
+            z-index: 1000;
+            padding: 20px;
+            text-align: center;
+        }
+        
+        .ad-container {
+            margin: 0 auto;
+            margin-bottom: 15px;
+        }
+        
+        .close-btn {
+            display: none;
+            background: #333;
+            color: white;
+            border: none;
+            padding: 8px 15px;
+            cursor: pointer;
+            margin: 0 auto;
+            border-radius: 4px;
+        }
+        
+        .close-btn:hover {
+            background: #555;
+        }
+        
+        .overlay {
+            display: none;
+            position: fixed;
             top: 0;
             left: 0;
             width: 100%;
             height: 100%;
-            background-color: rgba(0, 0, 0, 0.9);
-            display: none;
-            flex-direction: column;
-            justify-content: center;
-            align-items: center;
-            z-index: 100;
-            padding: 20px;
-            box-sizing: border-box;
-        }
-        
-        #adGrid {
-            display: grid;
-            grid-template-columns: repeat(2, 1fr);
-            grid-gap: 20px;
-            max-width: 650px;
-            margin: 20px;
-        }
-        
-        .adSlot {
-            background-color: #222;
-            border: 1px solid #00FA7B;
-            height: 250px;
-            width: 300px;
-            overflow: hidden;
-            display: flex;
-            justify-content: center;
-            align-items: center;
-        }
-        
-        #adCountdown {
-            color: white;
-            font-size: 24px;
-            margin-bottom: 20px;
-        }
-        
-        #skipAdButton {
-            background-color: #f44336;
-            width: auto;
-            padding: 8px 16px;
-            margin-top: 20px;
-        }
-        
-        #skipAdButton:hover {
-            background-color: #d32f2f;
-        }
-        
-        /* Close button styles */
-        #closeAdButton {
-            position: absolute;
-            top: 15px;
-            right: 15px;
-            background: rgba(255, 255, 255, 0.2);
-            border: none;
-            color: white;
-            font-size: 24px;
-            font-weight: bold;
-            cursor: pointer;
-            display: none;
-            width: 40px;
-            height: 40px;
-            border-radius: 50%;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            transition: all 0.3s;
-            z-index: 101;
-        }
-        
-        #closeAdButton:hover {
-            background-color: rgba(255, 255, 255, 0.3);
-            color: #00FA7B;
-            transform: scale(1.1);
-        }
-        
-        #closeAdButton:active {
-            transform: scale(0.9);
-        }
-        
-        .ad-label {
-            color: white;
-            font-size: 14px;
-            margin-top: 5px;
-            text-align: center;
+            background: rgba(0,0,0,0.5);
+            z-index: 999;
         }
     </style>
 </head>
 <body>
+    <h1>Main Content</h1>
+    <p>This is the main page content. The ad popup will appear after 1 minute.</p>
     
-    <div class="main-container">
-        <div class="iframe-container">
-            <div class="container">
-                <h1>Website Preview</h1>
-                <div id="iframeContainer">
-                    <iframe id="websiteFrame" src="about:blank" sandbox="allow-same-origin allow-scripts allow-popups allow-forms"></iframe>
-                    
-                    <!-- Ad container that will be shown before refresh -->
-                    <div id="adContainer">
-                        <button id="closeAdButton" title="Close" class="hidden">×</button>
-                        <div id="adCountdown">Ads will disappear in: 15 seconds</div>
-                        <div id="adGrid">
-                            <div class="ad-slot-container">
-                                <div class="adSlot" id="ad1"></div>
-                                <div class="ad-label">Advertisement</div>
-                            </div>
-                            <div class="ad-slot-container">
-                                <div class="adSlot" id="ad2"></div>
-                                <div class="ad-label">Advertisement</div>
-                            </div>
-                            <div class="ad-slot-container">
-                                <div class="adSlot" id="ad3"></div>
-                                <div class="ad-label">Advertisement</div>
-                            </div>
-                            <div class="ad-slot-container">
-                                <div class="adSlot" id="ad4"></div>
-                                <div class="ad-label">Advertisement</div>
-                            </div>
-                        </div>
-                        <button id="skipAdButton">Skip Ads</button>
-                    </div>
-                </div>
-            </div>
+    <div class="overlay" id="overlay"></div>
+    
+    <div class="ad-popup" id="adPopup">
+        <h3>Advertisement</h3>
+        <div class="ad-container" id="adContainer">
+            <!-- Your ad code will be inserted here -->
         </div>
-        
-        <div class="controls-container night-mode">
-            <div class="container">
-                <h1>Controls</h1>
-                
-                <!-- Scrollable content wrapper -->
-                <div class="controls-scrollable">
-                    <div class="option-group">
-                        <label></label>
-                        <div class="toggle-button-group">
-                            <input type="radio" id="normalInterval" name="intervalType" value="normal" checked>
-                            <label for="normalInterval" class="toggle-button">
-                              <span class="toggle-icon">↻</span>
-                              <span>Normal Interval</span>
-                            </label>
-                            
-                            <input type="radio" id="randomInterval" name="intervalType" value="random">
-                            <label for="randomInterval" class="toggle-button">
-                              <span class="toggle-icon">🎲</span>
-                              <span>Random Interval</span>
-                            </label>
-                          </div>
-                    </div>
-                    
-                    <div class="option-group" id="normalIntervalGroup">
-                        <label for="intervalTime">Interval Time (seconds):</label>
-                        <input type="number" id="intervalTime" min="1" value="30">
-                    </div>
-                    
-                    <div class="option-group hidden" id="randomIntervalGroup">
-                        <label>Set Time Range:</label>
-                        <div class="range-inputs">
-                            <div>
-                                <label for="minTime">min</label>
-                                <input type="number" id="minTime" min="1" value="10">
-                            </div>
-                            <div>
-                                <label for="maxTime">max</label>
-                                <input type="number" id="maxTime" min="1" value="60">
-                            </div>
-                        </div>
-                    </div>
-                    
-                    <div class="option-group">
-                        <label><br/> ________________________________________</label>
-                        <div class="radio-button-group">
-                            <input type="radio" id="oneLink" name="linkMode" value="one" checked>
-                            <label for="oneLink" class="button-radio">One Link</label>
-                            
-                            <input type="radio" id="multipleLink" name="linkMode" value="multiple">
-                            <label for="multipleLink" class="button-radio">Multiple Link</label>
-                          </div>
-                        <div class="note"> <br/> <br/>Only 4 links are currently supported</div>
-                    </div>
-                    
-                    <div class="option-group" id="singleLinkGroup">
-                        <label for="link1">Link (eg - https://www.google.com):</label>
-                        <input type="url" id="link1" placeholder="https://www.example.com" value="https://www.google.com">
-                    </div>
-                    
-                    <div class="option-group hidden" id="multipleLinksGroup">
-                        <label for="link1">Link 1 (eg - https://www.google.com):</label>
-                        <input type="url" id="multiLink1" placeholder="https://www.example.com" value="https://www.google.com">
-                        
-                        <label for="link2">Link 2 (eg - https://www.google.com):</label>
-                        <input type="url" id="multiLink2" placeholder="https://www.example.com" value="https://www.bing.com">
-                        
-                        <label for="link3">Link 3 (eg - https://www.google.com):</label>
-                        <input type="url" id="multiLink3" placeholder="https://www.example.com" value="https://www.wikipedia.org">
-                        
-                        <label for="link4">Link 4 (eg - https://www.google.com):</label>
-                        <input type="url" id="multiLink4" placeholder="https://www.example.com" value="https://www.github.com">
-                    </div>
-                </div>
-                
-                <!-- Fixed bottom section -->
-                <div class="controls-footer">
-                    <div class="controls">
-                        <button id="startButton">Start</button>
-                        <button id="stopButton" class="hidden">Stop</button>
-                    </div>
-                    <div id="timerDisplay"></div>
-                </div>
-            </div>
-        </div>
+        <button class="close-btn" id="closeBtn">Close Ad</button>
+    </div>
 
     <script>
-        document.addEventListener('DOMContentLoaded', function() {
-            // DOM elements
-            const normalIntervalRadio = document.getElementById('normalInterval');
-            const randomIntervalRadio = document.getElementById('randomInterval');
-            const normalIntervalGroup = document.getElementById('normalIntervalGroup');
-            const randomIntervalGroup = document.getElementById('randomIntervalGroup');
+        // Show ad popup after 1 minute (60000 milliseconds)
+        setTimeout(function() {
+            document.getElementById('overlay').style.display = 'block';
+            document.getElementById('adPopup').style.display = 'block';
             
-            const oneLinkRadio = document.getElementById('oneLink');
-            const multipleLinkRadio = document.getElementById('multipleLink');
-            const singleLinkGroup = document.getElementById('singleLinkGroup');
-            const multipleLinksGroup = document.getElementById('multipleLinksGroup');
+            // Insert your ad code
+            var adContainer = document.getElementById('adContainer');
+            var adScript = document.createElement('script');
+            adScript.type = 'text/javascript';
+            adScript.innerHTML = `
+                atOptions = {
+                    'key' : '242d1e51b3c512f9ddb86da4329dc237',
+                    'format' : 'iframe',
+                    'height' : 250,
+                    'width' : 300,
+                    'params' : {}
+                };
+            `;
+            adContainer.appendChild(adScript);
             
-            const startButton = document.getElementById('startButton');
-            const stopButton = document.getElementById('stopButton');
-            const timerDisplay = document.getElementById('timerDisplay');
-            const websiteFrame = document.getElementById('websiteFrame');
+            var invokeScript = document.createElement('script');
+            invokeScript.type = 'text/javascript';
+            invokeScript.src = '//www.highperformanceformat.com/242d1e51b3c512f9ddb86da4329dc237/invoke.js';
+            adContainer.appendChild(invokeScript);
             
-            // Ad related elements
-            const adContainer = document.getElementById('adContainer');
-            const adCountdown = document.getElementById('adCountdown');
-            const skipAdButton = document.getElementById('skipAdButton');
-            const closeAdButton = document.getElementById('closeAdButton');
+            // Show close button after 15 seconds (15000 milliseconds)
+            setTimeout(function() {
+                document.getElementById('closeBtn').style.display = 'block';
+            }, 15000);
             
-            // Variables
-            let refreshTimer = null;
-            let currentCountdown = null;
-            let isRunning = false;
-            let currentUrl = '';
-            let adTimer = null;
-            let adCountdownSeconds = 15;
-            
-            // Event listeners for radio buttons
-            normalIntervalRadio.addEventListener('change', function() {
-                if (this.checked) {
-                    normalIntervalGroup.classList.remove('hidden');
-                    randomIntervalGroup.classList.add('hidden');
-                }
-            });
-            
-            randomIntervalRadio.addEventListener('change', function() {
-                if (this.checked) {
-                    normalIntervalGroup.classList.add('hidden');
-                    randomIntervalGroup.classList.remove('hidden');
-                }
-            });
-            
-            oneLinkRadio.addEventListener('change', function() {
-                if (this.checked) {
-                    singleLinkGroup.classList.remove('hidden');
-                    multipleLinksGroup.classList.add('hidden');
-                }
-            });
-            
-            multipleLinkRadio.addEventListener('change', function() {
-                if (this.checked) {
-                    singleLinkGroup.classList.add('hidden');
-                    multipleLinksGroup.classList.remove('hidden');
-                }
-            });
-            
-            // Start/Stop functionality
-            startButton.addEventListener('click', startRefreshing);
-            stopButton.addEventListener('click', stopRefreshing);
-            
-            // Skip ad button
-            skipAdButton.addEventListener('click', skipAds);
-            
-            // Close ad button
-            closeAdButton.addEventListener('click', handleCloseAd);
-            
-            function startRefreshing() {
-                if (isRunning) return;
-                
-                isRunning = true;
-                startButton.classList.add('hidden');
-                stopButton.classList.remove('hidden');
-                
-                // Load initial URL
-                loadUrl();
-                
-                // Determine interval type
-                if (normalIntervalRadio.checked) {
-                    const intervalSeconds = parseInt(document.getElementById('intervalTime').value);
-                    if (isNaN(intervalSeconds) || intervalSeconds < 1) {
-                        alert('Please enter a valid interval time (minimum 1 second)');
-                        stopRefreshing();
-                        return;
-                    }
-                    startCountdown(intervalSeconds);
-                    refreshTimer = setInterval(() => {
-                        showAds(() => {
-                            refreshPage();
-                            startCountdown(intervalSeconds);
-                        });
-                    }, intervalSeconds * 1000);
-                } else {
-                    setupRandomRefresh();
-                }
-            }
-            
-            function setupRandomRefresh() {
-                const minTime = parseInt(document.getElementById('minTime').value);
-                const maxTime = parseInt(document.getElementById('maxTime').value);
-                
-                if (isNaN(minTime) || minTime < 1) {
-                    alert('Please enter a valid minimum time (minimum 1 second)');
-                    stopRefreshing();
-                    return;
-                }
-                
-                if (isNaN(maxTime) || maxTime < 1) {
-                    alert('Please enter a valid maximum time (minimum 1 second)');
-                    stopRefreshing();
-                    return;
-                }
-                
-                if (minTime >= maxTime) {
-                    alert('Minimum time must be less than maximum time');
-                    stopRefreshing();
-                    return;
-                }
-                
-                const randomInterval = getRandomInt(minTime, maxTime);
-                startCountdown(randomInterval);
-                
-                // Clear any existing timeout
-                if (refreshTimer) {
-                    clearTimeout(refreshTimer);
-                }
-                
-                refreshTimer = setTimeout(() => {
-                    showAds(() => {
-                        refreshPage();
-                        if (isRunning) {
-                            setupRandomRefresh(); // Setup next random refresh
-                        }
-                    });
-                }, randomInterval * 1000);
-            }
-            
-            function stopRefreshing() {
-                isRunning = false;
-                startButton.classList.remove('hidden');
-                stopButton.classList.add('hidden');
-                
-                if (refreshTimer) {
-                    clearInterval(refreshTimer);
-                    clearTimeout(refreshTimer);
-                    refreshTimer = null;
-                }
-                
-                if (currentCountdown) {
-                    clearInterval(currentCountdown);
-                    currentCountdown = null;
-                }
-                
-                timerDisplay.textContent = '';
-                
-                // Also hide ads if they're showing
-                hideAds();
-            }
-            
-            function loadUrl() {
-                let url;
-                
-                if (oneLinkRadio.checked) {
-                    url = document.getElementById('link1').value;
-                    if (!url || !isValidUrl(url)) {
-                        alert('Please enter a valid URL starting with http:// or https://');
-                        stopRefreshing();
-                        return;
-                    }
-                } else {
-                    const urls = [
-                        document.getElementById('multiLink1').value,
-                        document.getElementById('multiLink2').value,
-                        document.getElementById('multiLink3').value,
-                        document.getElementById('multiLink4').value
-                    ].filter(u => u && isValidUrl(u)); // Filter out empty and invalid URLs
-                    
-                    if (urls.length === 0) {
-                        alert('Please enter at least one valid URL starting with http:// or https://');
-                        stopRefreshing();
-                        return;
-                    }
-                    
-                    // Select random URL
-                    url = urls[Math.floor(Math.random() * urls.length)];
-                }
-                
-                currentUrl = url;
-                websiteFrame.src = url;
-            }
-            
-            function isValidUrl(url) {
-                try {
-                    new URL(url);
-                    return true;
-                } catch (e) {
-                    return false;
-                }
-            }
-            
-            function refreshPage() {
-                if (!currentUrl) return;
-                
-                // Force refresh by adding a timestamp to the URL
-                websiteFrame.src = currentUrl + (currentUrl.includes('?') ? '&' : '?') + 't=' + Date.now();
-                
-                // For multiple links mode, load a new URL
-                if (multipleLinkRadio.checked) {
-                    loadUrl();
-                }
-            }
-            
-            function startCountdown(seconds) {
-                if (currentCountdown) {
-                    clearInterval(currentCountdown);
-                }
-                
-                let remaining = seconds;
-                updateTimerDisplay(remaining);
-                
-                currentCountdown = setInterval(() => {
-                    remaining--;
-                    updateTimerDisplay(remaining);
-                    
-                    if (remaining <= 0) {
-                        clearInterval(currentCountdown);
-                        currentCountdown = null;
-                    }
-                }, 1000);
-            }
-            
-            function updateTimerDisplay(seconds) {
-                const mins = Math.floor(seconds / 60);
-                const secs = seconds % 60;
-                timerDisplay.textContent = `Next refresh in: ${mins}:${secs < 10 ? '0' : ''}${secs}`;
-            }
-            
-            function getRandomInt(min, max) {
-                min = Math.ceil(min);
-                max = Math.floor(max);
-                return Math.floor(Math.random() * (max - min + 1)) + min;
-            }
-            
-            // Ad related functions
-            function showAds(callback) {
-                // Reset ad countdown
-                adCountdownSeconds = 15;
-                adCountdown.textContent = `Ads will disappear in: ${adCountdownSeconds} seconds`;
-                
-                // Hide close button initially
-                closeAdButton.classList.add('hidden');
-                
-                // Load ads
-                loadAds();
-                
-                // Show ad container
-                adContainer.style.display = 'flex';
-                
-                // Start ad countdown
-                if (adTimer) {
-                    clearInterval(adTimer);
-                }
-                
-                adTimer = setInterval(() => {
-                    adCountdownSeconds--;
-                    
-                    // Update countdown display
-                    if (adCountdownSeconds > 0) {
-                        adCountdown.textContent = `Ads will disappear in: ${adCountdownSeconds} seconds`;
-                    } else if (adCountdownSeconds === 0) {
-                        // Show close button when countdown reaches 0
-                        closeAdButton.classList.remove('hidden');
-                        adCountdown.textContent = 'You may now close the ads';
-                    }
-                    
-                    // Auto-close after 20 seconds total (15 + 5)
-                    if (adCountdownSeconds <= -5) {
-                        hideAds();
-                        if (callback) callback();
-                    }
-                }, 1000);
-            }
-            
-            function hideAds() {
-                adContainer.style.display = 'none';
-                closeAdButton.classList.add('hidden');
-                if (adTimer) {
-                    clearInterval(adTimer);
-                    adTimer = null;
-                }
-            }
-            
-            function skipAds() {
-                hideAds();
-                refreshPage();
-                
-                // Restart the main timer if needed
-                if (normalIntervalRadio.checked) {
-                    const intervalSeconds = parseInt(document.getElementById('intervalTime').value);
-                    startCountdown(intervalSeconds);
-                }
-            }
-            
-            function handleCloseAd() {
-                hideAds();
-                refreshPage();
-                
-                // Restart the main timer if needed
-                if (normalIntervalRadio.checked) {
-                    const intervalSeconds = parseInt(document.getElementById('intervalTime').value);
-                    startCountdown(intervalSeconds);
-                }
-            }
-            
-            function loadAds() {
-                // Clear previous ads
-                document.getElementById('ad1').innerHTML = '';
-                document.getElementById('ad2').innerHTML = '';
-                document.getElementById('ad3').innerHTML = '';
-                document.getElementById('ad4').innerHTML = '';
-                
-                // Load new ads
-                loadAd('ad1');
-                loadAd('ad2');
-                loadAd('ad3');
-                loadAd('ad4');
-            }
-            
-            function loadAd(adSlotId) {
-                const adSlot = document.getElementById(adSlotId);
-                
-                // Create ad script
-                const adScript = document.createElement('script');
-                adScript.type = 'text/javascript';
-                adScript.innerHTML = `
-                    atOptions = {
-                        'key': '242d1e51b3c512f9ddb86da4329dc237',
-                        'format': 'iframe',
-                        'height': 250,
-                        'width': 300,
-                        'params': {}
-                    };
-                `;
-                
-                // Create ad container iframe
-                const adIframe = document.createElement('iframe');
-                adIframe.style.width = '300px';
-                adIframe.style.height = '250px';
-                adIframe.style.border = 'none';
-                adIframe.style.overflow = 'hidden';
-                
-                // Append elements
-                adSlot.appendChild(adScript);
-                adSlot.appendChild(adIframe);
-                
-                // Load ad content
-                const invokeScript = document.createElement('script');
-                invokeScript.type = 'text/javascript';
-                invokeScript.src = '//www.highperformanceformat.com/242d1e51b3c512f9ddb86da4329dc237/invoke.js';
-                adSlot.appendChild(invokeScript);
-            }
+        }, 60000);
+        
+        // Close button functionality
+        document.getElementById('closeBtn').addEventListener('click', function() {
+            document.getElementById('overlay').style.display = 'none';
+            document.getElementById('adPopup').style.display = 'none';
         });
     </script>
 </body>
